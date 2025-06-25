@@ -7,8 +7,7 @@ from dotenv import load_dotenv
 import os
 
 # ───── Load environment variables ─────
-load_dotenv()
-API_KEY = os.getenv("PAGESPEED_API_KEY")
+API_KEY = st.secrets.get("PAGESPEED_API_KEY")
 
 if not API_KEY:
     st.error("🚨 API key is missing. Please set PAGESPEED_API_KEY in .env.")
