@@ -71,4 +71,6 @@ if site_url and api_key:
 
                 # Generate and offer PDF download
                 pdf_path = generate_pdf_report(summary_data)
-                with open(pdf_path, "rb") as
+with open(pdf_path, "rb") as f:
+    st.download_button("📥 Download PDF Report", f, file_name="seo_audit_report.pdf", mime="application/pdf")
+
