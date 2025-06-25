@@ -45,7 +45,7 @@ if site_url and api_key:
                 st.write(f"**Performance Score**: {summary_data['perf_score']}%")
 
                 # Optional: Offer JSON download
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as jf:
+                with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix=".json") as jf:
                     json.dump(full_json, jf)
                     jf.seek(0)
                     st.download_button("📄 Download Full JSON Report", jf, file_name="raw_lighthouse_report.json", mime="application/json")
