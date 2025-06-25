@@ -11,9 +11,12 @@ st.title("🚀 Mini SEO Auditor - Google PageSpeed API")
 # Input field for the URL
 site_url = st.text_input("Enter the website URL to audit:", placeholder="https://example.com")
 
+# Input field for the API key
+api_key = st.text_input("Enter your Google PageSpeed API Key:", type="password")
+
 # Function to fetch data from Google PageSpeed API
-def fetch_lighthouse_data(site_url):
-    api_url = f"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={site_url}&category=performance&category=seo&strategy=mobile"
+def fetch_lighthouse_data(site_url, api_key):
+    api_url = f"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={site_url}&category=performance&category=seo&strategy=mobile&key={api_key}"
     try:
         response = requests.get(api_url)
         response.raise_for_status()
@@ -56,10 +59,10 @@ def generate_pdf_report(data):
         return tmp_pdf.name
 
 # Main logic
-if site_url:
+if site_url and api_key:
     if st.button("Run Audit"):
         with st.spinner("Fetching audit data..."):
-            summary_data, full_json = fetch_lighthouse_data(site_url)
+            summary_data, full_json = fetch_lighthouse_data(site_url, api_key)
             if summary_data:
                 st.success("Audit completed!")
                 st.write("### Summary:")
