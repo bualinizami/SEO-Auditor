@@ -1,8 +1,8 @@
 import streamlit as st
 import requests
-import pdfkit
 import tempfile
 import json
+from weasyprint import HTML
 
 st.set_page_config(page_title="Mini SEO Auditor", layout="centered")
 st.title("🚀 Mini SEO Auditor - Google PageSpeed API")
@@ -33,7 +33,7 @@ def fetch_lighthouse_data(site_url, api_key):
         st.error(f"Failed to fetch audit data: {e}")
         return None, None
 
-# Function to generate PDF report using pdfkit
+# Function to generate PDF report using WeasyPrint
 def generate_pdf_report(data):
     html = f"""
     <html>
@@ -54,7 +54,7 @@ def generate_pdf_report(data):
     </html>
     """
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_pdf:
-        pdfkit.from_string(html, tmp_pdf.name)
+        HTML(string=html).write_pdf(tmp_pdf.name)
         return tmp_pdf.name
 
 # Main logic
@@ -71,11 +71,4 @@ if site_url and api_key:
 
                 # Generate and offer PDF download
                 pdf_path = generate_pdf_report(summary_data)
-                with open(pdf_path, "rb") as f:
-                    st.download_button("📥 Download PDF Report", f, file_name="seo_audit_report.pdf", mime="application/pdf")
-
-                # Optional: Offer JSON download
-                with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as jf:
-                    json.dump(full_json, jf)
-                    jf.seek(0)
-                    st.download_button("📄 Download Full JSON Report", jf, file_name="raw_lighthouse_report.json", mime="application/json")
+                with open(pdf_path, "rb") as
