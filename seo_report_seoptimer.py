@@ -2,86 +2,49 @@ import streamlit as st
 import requests
 import json
 import io
-from docx import Document
-from dotenv import load_dotenv
-import os
 
-# ───── Load environment variables ─────
-API_KEY = st.secrets.get("PAGESPEED_API_KEY")
+st.set_page_config(page_title="Mini SEO Auditor", layout="centered")
+st.title("🚀 Mini SEO Auditor - Google PageSpeed API")
 
-if not API_KEY:
-    st.error("🚨 API key is missing. Please set PAGESPEED_API_KEY in .env.")
-    st.stop()
+# Input field for the URL
+site_url = st.text_input("Enter the website URL to audit:", placeholder="https://example.com")
 
-API_ENDPOINT = "https://www.googleapis.com/pagespeedonline/v5/runPagespeed"
+# Input field for the API key
+api_key = st.text_input("Enter your Google PageSpeed API Key:", type="password")
 
-# Fetch data from PageSpeed API
-def fetch_pagespeed_data(url):
-    params = {"url": url, "key": API_KEY, "strategy": "mobile"}
-    response = requests.get(API_ENDPOINT, params=params)
-    return response.json()
-
-# Extract relevant audit summary
-def extract_summary(data):
+# Function to fetch data from Google PageSpeed API
+def fetch_lighthouse_data(site_url, api_key):
+    api_url = f"https://www.googleapis.com/pagespeedonline/v5/runPagespeed?url={site_url}&category=performance&category=seo&strategy=mobile&key={api_key}"
     try:
-        title = data["lighthouseResult"]["finalUrl"]
-        seo_score = data["lighthouseResult"]["categories"]["seo"]["score"] * 100
-        perf_score = data["lighthouseResult"]["categories"]["performance"]["score"] * 100
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+        seo_score = data['lighthouseResult']['categories']['seo']['score'] * 100
+        perf_score = data['lighthouseResult']['categories']['performance']['score'] * 100
+        title = data['lighthouseResult']['finalUrl']
+
         return {
-            "title": title,
-            "seo_score": int(seo_score),
-            "perf_score": int(perf_score),
-        }
-    except KeyError:
-        return None
+            'title': title,
+            'seo_score': seo_score,
+            'perf_score': perf_score
+        }, data
+    except Exception as e:
+        st.error(f"Failed to fetch audit data: {e}")
+        return None, None
 
-# Generate Word report
-def generate_docx(summary_data):
-    doc = Document()
-    doc.add_heading("SEO Audit Report", 0)
-    doc.add_paragraph(f"URL: {summary_data['title']}")
-    doc.add_paragraph(f"SEO Score: {summary_data['seo_score']}%")
-    doc.add_paragraph(f"Performance Score: {summary_data['perf_score']}%")
-    
-    output = io.BytesIO()
-    doc.save(output)
-    output.seek(0)
-    return output
-
-# ───── Streamlit UI ─────
-st.set_page_config(page_title="Mini SEO Auditor", page_icon="🔍")
-st.title("🔍 Mini SEO Auditor")
-st.markdown("Check SEO and Performance scores using Google PageSpeed API.")
-
-site_url = st.text_input("Enter website URL to audit (include http/https):", "")
-
-if site_url:
+# Main logic
+if site_url and api_key:
     if st.button("Run Audit"):
-        with st.spinner("Fetching data from Google PageSpeed..."):
-            full_json = fetch_pagespeed_data(site_url)
-            summary_data = extract_summary(full_json)
-
+        with st.spinner("Fetching audit data..."):
+            summary_data, full_json = fetch_lighthouse_data(site_url, api_key)
             if summary_data:
-                st.success("Audit completed successfully!")
-                st.subheader("📈 SEO Summary")
-                st.write(summary_data)
+                st.success("Audit completed!")
+                st.write("### Summary:")
+                st.write(f"**URL**: {summary_data['title']}")
+                st.write(f"**SEO Score**: {summary_data['seo_score']}%")
+                st.write(f"**Performance Score**: {summary_data['perf_score']}%")
 
-                # Word Download
-                docx_file = generate_docx(summary_data)
-                st.download_button(
-                    "📄 Download Word Report",
-                    docx_file,
-                    file_name="seo_report.docx",
-                    mime="application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                )
-
-                # JSON Download
-                json_file = io.BytesIO(json.dumps(full_json, indent=2).encode("utf-8"))
-                st.download_button(
-                    "📁 Download Full JSON Report",
-                    json_file,
-                    file_name="seo_report.json",
-                    mime="application/json"
-                )
-            else:
-                st.error("Failed to extract SEO data from the API response.")
+                # Offer JSON download
+                json_str = json.dumps(full_json, indent=2)
+                json_bytes = io.BytesIO(json_str.encode('utf-8'))
+                st.download_button("📄 Download Full JSON Report", json_bytes, file_name="raw_lighthouse_report.json", mime="application/json")
