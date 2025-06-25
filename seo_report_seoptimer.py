@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 import pdfkit
 import tempfile
-import os
 import json
 
 st.set_page_config(page_title="Mini SEO Auditor", layout="centered")
@@ -76,8 +75,7 @@ if site_url and api_key:
                     st.download_button("📥 Download PDF Report", f, file_name="seo_audit_report.pdf", mime="application/pdf")
 
                 # Optional: Offer JSON download
-                json_path = tempfile.NamedTemporaryFile(delete=False, suffix=".json")
-                with open(json_path.name, "w") as jf:
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".json") as jf:
                     json.dump(full_json, jf)
-                with open(json_path.name, "rb") as jf:
+                    jf.seek(0)
                     st.download_button("📄 Download Full JSON Report", jf, file_name="raw_lighthouse_report.json", mime="application/json")
