@@ -1,7 +1,7 @@
 import streamlit as st
 import requests
-import tempfile
 import json
+import io
 
 st.set_page_config(page_title="Mini SEO Auditor", layout="centered")
 st.title("🚀 Mini SEO Auditor - Google PageSpeed API")
@@ -44,8 +44,7 @@ if site_url and api_key:
                 st.write(f"**SEO Score**: {summary_data['seo_score']}%")
                 st.write(f"**Performance Score**: {summary_data['perf_score']}%")
 
-                # Optional: Offer JSON download
-                with tempfile.NamedTemporaryFile(mode='w+', delete=False, suffix=".json") as jf:
-                    json.dump(full_json, jf)
-                    jf.seek(0)
-                    st.download_button("📄 Download Full JSON Report", jf, file_name="raw_lighthouse_report.json", mime="application/json")
+                # Offer JSON download
+                json_str = json.dumps(full_json, indent=2)
+                json_bytes = io.BytesIO(json_str.encode('utf-8'))
+                st.download_button("📄 Download Full JSON Report", json_bytes, file_name="raw_lighthouse_report.json", mime="application/json")
